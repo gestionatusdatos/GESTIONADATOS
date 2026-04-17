@@ -833,11 +833,23 @@ with st.expander("🏛️  REMUNERACIONES", expanded=False):
                     title=dict(text="Top funcionarios — Monto total horas extras acumulado",
                                font=dict(size=13, color="#000", family="Inter"), x=0),
                 )
-                st.plotly_chart(fig_hex, use_container_width=True)
+                event_hex = st.plotly_chart(fig_hex, use_container_width=True,
+                                            on_select="rerun", key="chart_hex")
+                sel_hex = (event_hex or {}).get("selection", {}).get("points", [])
+                if sel_hex:
+                    sel_idx_hex = sel_hex[0]["point_index"]
+                    rows_hex = top_hex.iloc[[sel_idx_hex]].copy()
+                    st.markdown(
+                        "<div style='text-align:center;margin:-6px 0 10px;"
+                        "font-size:12px;color:#555;'>"
+                        "👆 Haz clic en el fondo del gráfico para ver todos los funcionarios</div>",
+                        unsafe_allow_html=True)
+                else:
+                    rows_hex = top_hex
 
                 # Tabla detallada
                 filas_hex = ""
-                for i, r in top_hex.iterrows():
+                for i, r in rows_hex.iterrows():
                     area_label = LABELS.get(r["area"], r["area"])
                     area_color = COLORS.get(r["area"], "#003DA5")
                     filas_hex += f"""
@@ -957,11 +969,23 @@ with st.expander("🏛️  REMUNERACIONES", expanded=False):
                 ),
                 uniformtext=dict(mode="hide", minsize=10),
             )
-            st.plotly_chart(fig_aum, use_container_width=True)
+            event_aum = st.plotly_chart(fig_aum, use_container_width=True,
+                                        on_select="rerun", key="chart_aum")
+            sel_aum = (event_aum or {}).get("selection", {}).get("points", [])
+            if sel_aum:
+                sel_idx_aum = sel_aum[0]["point_index"]
+                rows_aum = top_aum.iloc[[sel_idx_aum]].copy()
+                st.markdown(
+                    "<div style='text-align:center;margin:-6px 0 10px;"
+                    "font-size:12px;color:#555;'>"
+                    "👆 Haz clic en el fondo del gráfico para ver todos los funcionarios</div>",
+                    unsafe_allow_html=True)
+            else:
+                rows_aum = top_aum
 
             # ── Tabla ─────────────────────────────────────────────────────────
             _filas_aum = ""
-            for _i, _r in top_aum.iterrows():
+            for _i, _r in rows_aum.iterrows():
                 _ac = COLORS.get(_r["area"], "#003DA5")
                 _al = LABELS.get(_r["area"], _r["area"])
                 _filas_aum += (
