@@ -42,7 +42,23 @@ function printSec(){
     var tbs=exp?exp.querySelectorAll('table'):[];
     var th='';
     tbs.forEach(function(tb){th+=tb.outerHTML+'<br/>';});
-    if(!th)th='<p style="color:#888;font-style:italic">Sin datos tabulares en esta seccion.</p>';
+    // Capture Plotly charts as SVG images
+    var plots=exp?exp.querySelectorAll('.js-plotly-plot'):[];
+    var chartHtml='';
+    plots.forEach(function(plot){
+      try{
+        var svg=plot.querySelector('svg.main-svg');
+        if(svg){
+          var s=new XMLSerializer();
+          var svgStr=s.serializeToString(svg);
+          chartHtml+='<div style="text-align:center;margin:16px 0 24px;page-break-inside:avoid;">'
+            +'<img src="data:image/svg+xml,'+encodeURIComponent(svgStr)+'" style="max-width:100%;height:auto;border:1px solid #EEF3FF;border-radius:6px;padding:8px;"/>'
+            +'</div>';
+        }
+      }catch(ex){}
+    });
+    if(chartHtml) th=chartHtml+(th?'<div style="margin-top:20px;">'+th+'</div>':'');
+    if(!th)th='<p style="color:#888;font-style:italic">Sin datos en esta seccion.</p>';
     var mn=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
     var nd=new Date(),fe=nd.getDate()+' de '+mn[nd.getMonth()]+' de '+nd.getFullYear();
     var css=[
