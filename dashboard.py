@@ -158,7 +158,9 @@ details[open]>summary *{
   [data-testid="stToolbar"],[data-testid="stDecoration"]{display:none!important;}
   .ficha{box-shadow:none;border:1px solid #ccc;}
   .stApp{background:white!important;}
+  .print-footer-bar{display:block!important;}
 }
+.print-footer-bar{display:none;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -245,8 +247,12 @@ with st.sidebar:
 <div style="margin-top:4px;">
   <p style="font-size:.72rem;opacity:.85;margin:0 0 4px;font-weight:700;">📋 Fuentes de datos:</p>
   <p style="font-size:.70rem;opacity:.8;margin:0 0 6px;">Remuneraciones: <a href="https://munipuren.cl/transparencia/" target="_blank" style="color:#90CAF9;text-decoration:none;">munipuren.cl/transparencia</a></p>
-  <p style="font-size:.70rem;opacity:.8;margin:0;">Compras: <a href="https://datos-abiertos.chilecompra.cl/descargas" target="_blank" style="color:#90CAF9;text-decoration:none;">datos-abiertos.chilecompra.cl</a></p>
+  <p style="font-size:.70rem;opacity:.8;margin:0 0 14px;">Compras: <a href="https://datos-abiertos.chilecompra.cl/descargas" target="_blank" style="color:#90CAF9;text-decoration:none;">datos-abiertos.chilecompra.cl</a></p>
 </div>""", unsafe_allow_html=True)
+    st.markdown(f'''<div style="text-align:center;margin-top:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,.2);">
+  <img src="data:image/png;base64,{_LOGO_B64}" style="max-width:100px;opacity:.85;border-radius:6px;" alt="Gestiona tus datos"/>
+  <p style="font-size:.62rem;opacity:.55;margin:4px 0 0;text-align:center;">www.gestionadatos.cl</p>
+</div>''', unsafe_allow_html=True)
 
 # Compatibilidad con código de remuneraciones que usa sel_mes / mes_num
 sel_mes = "Todos los meses"
@@ -263,16 +269,12 @@ areas_txt = " · ".join(LABELS[a] for a in areas_sel)
 #  HEADER
 # ─────────────────────────────────────────────────────────────────────────────
 st.markdown(f"""
-<div class="hdr" style="display:flex;align-items:center;justify-content:space-between;gap:20px;">
-  <div>
-    <h1 style="margin:0;">🏛️ PROYECTO, TRANSPARENCIA EN EL SECTOR PÚBLICO - COMUNA DE PURÉN</h1>
-    <p style="margin:4px 0 2px;font-size:.95rem;">Período: <b>{periodo}</b> &nbsp;|&nbsp; {areas_txt}</p>
-    <p style="margin:0;font-size:.78rem;opacity:.75;">Trabajo realizado por Empresa <b>Gestiona tus datos</b> &nbsp;·&nbsp; <a href="https://www.gestionadatos.cl" style="color:rgba(255,255,255,.9)">www.gestionadatos.cl</a></p>
-  </div>
-  <div style="flex-shrink:0;">
-    <img src="data:image/png;base64,{_LOGO_B64}" style="height:70px;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(0,0,0,.3));" alt="Gestiona tus datos"/>
-  </div>
+<div class="hdr">
+  <h1>🏛️ PROYECTO, TRANSPARENCIA EN EL SECTOR PÚBLICO - COMUNA DE PURÉN</h1>
+  <p style="margin:4px 0 2px;font-size:.95rem;">Período: <b>{periodo}</b> &nbsp;|&nbsp; {areas_txt}</p>
+  <p style="margin:0;font-size:.78rem;opacity:.75;">Trabajo realizado por <b>Gestiona tus datos</b> &nbsp;·&nbsp; <a href="https://www.gestionadatos.cl" style="color:rgba(255,255,255,.9)">www.gestionadatos.cl</a></p>
 </div>""", unsafe_allow_html=True)
+st.markdown('<div class="print-footer-bar" style="text-align:center;font-size:11px;color:#555;padding:4px;border-top:1px solid #ccc;font-family:Inter,sans-serif;">📊 www.gestionadatos.cl — Transparencia Municipal Purén 2025</div>', unsafe_allow_html=True)
 
 # ═════════════════════════════════════════════════════════════════════════════
 # ═════════════════════════════════════════════════════════════════════════════
@@ -432,10 +434,117 @@ with st.expander("🏛️  REMUNERACIONES", expanded=False):
             f'</tr></thead><tbody>{filas}</tbody></table></div>'
         )
 
-    with st.expander("🏆  Top 10 Remuneración Bruta Promedio por Área", expanded=False):
-        for area in areas_sel:
-            with st.expander(f"  {LABELS[area]}", expanded=False):
-                st.markdown(make_top10_html(area), unsafe_allow_html=True)
+    with st.expander("🏆  Remuneraciones más altas", expanded=False):
+        _area_opts_top = ["Todas las áreas"] + [LABELS[a] for a in areas_sel]
+        _sel_area_top  = st.selectbox("🏢  Filtrar por área", _area_opts_top, key="top_area_sel")
+        if _sel_area_top == "Todas las áreas":
+            _df_top = df_all[df_all["area"].isin(areas_sel) & df_all["rem_n"].notna() & (df_all["rem_n"]>0)]
+        else:
+            _area_key_top = [k for k,v in LABELS.items() if v == _sel_area_top][0]
+            _df_top = df_all[(df_all["area"] == _area_key_top) & df_all["rem_n"].notna() & (df_all["rem_n"]>0)]
+        _top10 = (
+            _df_top.groupby("key")
+            .agg(prom=("rem_n","mean"), nombre_display=("nombre_display","first"),
+                 area=("area","first"),
+                 cargo=("cargo", lambda x: x.mode()[0] if len(x)>0 else "—"))
+            .reset_index().sort_values("prom", ascending=False).head(10).reset_index(drop=True)
+        )
+        _filas10 = ""
+        for _i, _r in _top10.iterrows():
+            _ac = COLORS.get(_r["area"],"#003DA5")
+            _al = LABELS.get(_r["area"],_r["area"])
+            _filas10 += (
+                f"<tr><td style='padding:9px 14px;border-bottom:1px solid #EEF3FF;"
+                f"text-align:center;font-weight:800;color:#4DA3FF'>{_i+1}</td>"
+                f"<td style='padding:9px 14px;border-bottom:1px solid #EEF3FF'>"
+                f"<b>{_r['nombre_display']}</b><br>"
+                f"<span style='font-size:11px;color:#555'>{str(_r['cargo']).strip()}</span><br>"
+                f"<span style='font-size:10px;background:{_ac};color:white;border-radius:3px;padding:1px 5px'>{_al}</span></td>"
+                f"<td style='padding:9px 14px;border-bottom:1px solid #EEF3FF;"
+                f"text-align:right;font-weight:700;color:#003DA5;white-space:nowrap'>{fmt(_r['prom'])}</td></tr>"
+            )
+        st.markdown(
+            '<div class="wrap"><table class="t-top" style="width:100%"><thead><tr>' +
+            '<th style="text-align:center;width:36px">#</th>' +
+            '<th>Funcionario</th>' +
+            '<th style="text-align:right">Prom. Mensual</th>' +
+            f'</tr></thead><tbody>{_filas10}</tbody></table></div>',
+            unsafe_allow_html=True
+        )
+        components.html(_FOOTER_HTML, height=55)
+
+    # ═════════════════════════════════════════════════════════════════════════════
+    #  SECCIÓN 3b — TOTAL FUNCIONARIOS POR MES
+    # ═════════════════════════════════════════════════════════════════════════════
+    with st.expander("👤  Total Funcionarios", expanded=False):
+        _df_func = df_all[df_all["area"].isin(areas_sel) & df_all["rem_n"].notna() & (df_all["rem_n"]>0)].copy()
+        _func_mes = (
+            _df_func.groupby(["mes","mes_ord"])["key"]
+            .nunique().reset_index()
+            .rename(columns={"key":"total"})
+            .sort_values("mes_ord")
+        )
+        _func_mes["mes_nombre"] = _func_mes["mes"].map(MESES)
+        _func_por_area = (
+            _df_func.groupby(["mes","mes_ord","area"])["key"]
+            .nunique().reset_index()
+            .rename(columns={"key":"total"})
+            .sort_values("mes_ord")
+        )
+        _func_por_area["mes_nombre"] = _func_por_area["mes"].map(MESES)
+
+        fig_func = go.Figure()
+        # Línea total
+        fig_func.add_trace(go.Scatter(
+            x=_func_mes["mes_nombre"], y=_func_mes["total"],
+            mode="lines+markers+text",
+            name="Total",
+            line=dict(color="#003DA5", width=3),
+            marker=dict(size=9, color="#003DA5"),
+            text=_func_mes["total"].astype(str),
+            textposition="top center",
+            textfont=dict(size=12, color="#003DA5", family="Inter"),
+        ))
+        # Líneas por área
+        for _a in areas_sel:
+            _sub = _func_por_area[_func_por_area["area"]==_a]
+            if len(_sub)==0: continue
+            fig_func.add_trace(go.Scatter(
+                x=_sub["mes_nombre"], y=_sub["total"],
+                mode="lines+markers",
+                name=LABELS[_a],
+                line=dict(color=COLORS[_a], width=1.5, dash="dot"),
+                marker=dict(size=6),
+            ))
+        fig_func.update_layout(
+            plot_bgcolor="white", paper_bgcolor="white",
+            height=380,
+            margin=dict(t=40, b=20, l=10, r=10),
+            xaxis=dict(showgrid=False, tickfont=dict(size=11, color="#000")),
+            yaxis=dict(showgrid=True, gridcolor="#EEF3FF",
+                       tickfont=dict(size=11, color="#000"), zeroline=False,
+                       title=dict(text="N° Funcionarios", font=dict(size=11))),
+            legend=dict(orientation="h", y=-0.15, font=dict(size=11)),
+            title=dict(text="Total de funcionarios por mes — 2025",
+                       font=dict(size=13, color="#000", family="Inter"), x=0),
+        )
+        st.plotly_chart(fig_func, use_container_width=True)
+
+        # KPI total máximo y mínimo
+        if len(_func_mes):
+            _max_m = _func_mes.loc[_func_mes["total"].idxmax()]
+            _min_m = _func_mes.loc[_func_mes["total"].idxmin()]
+            st.markdown(
+                f'<div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">' +
+                f'<div style="flex:1;min-width:140px;background:#003DA5;border-radius:10px;padding:12px 16px;text-align:center;">' +
+                f'<div style="font-size:.65rem;color:rgba(255,255,255,.8);font-weight:700;text-transform:uppercase;">Mes con más funcionarios</div>' +
+                f'<div style="font-size:1.1rem;font-weight:900;color:white;">{_max_m['mes_nombre']} — {int(_max_m['total'])}</div></div>' +
+                f'<div style="flex:1;min-width:140px;background:#4DA3FF;border-radius:10px;padding:12px 16px;text-align:center;">' +
+                f'<div style="font-size:.65rem;color:rgba(255,255,255,.8);font-weight:700;text-transform:uppercase;">Mes con menos funcionarios</div>' +
+                f'<div style="font-size:1.1rem;font-weight:900;color:white;">{_min_m['mes_nombre']} — {int(_min_m['total'])}</div></div>' +
+                '</div>',
+                unsafe_allow_html=True
+            )
         components.html(_FOOTER_HTML, height=55)
 
     # ═════════════════════════════════════════════════════════════════════════════
@@ -467,7 +576,7 @@ with st.expander("🏛️  REMUNERACIONES", expanded=False):
 
     PLACEHOLDER = "— Escribe o selecciona un funcionario —"
 
-    with st.expander("👥  Listado de Funcionarios", expanded=False):
+    with st.expander("🔍  Buscar por cargo o funcionario", expanded=False):
 
         # Filtro por cargo
         cargos_unicos = sorted(listado["cargo"].dropna().unique().tolist())
@@ -679,10 +788,7 @@ with st.expander("🏛️  REMUNERACIONES", expanded=False):
         else:
             resumen_f = resumen
 
-        tab_hex, tab_bonos = st.tabs(["⏱️  Horas Extras", "🎯  Bonos e Incentivos"])
-
-        # ── TAB 1: HORAS EXTRAS ──────────────────────────────────────────────────
-        with tab_hex:
+        if True:
             top_hex = (resumen_f[resumen_f["hex_monto"] > 0]
                        .sort_values("hex_monto", ascending=False)
                        .head(20).reset_index(drop=True))
@@ -755,79 +861,12 @@ with st.expander("🏛️  REMUNERACIONES", expanded=False):
       <tbody>{filas_hex}</tbody>
     </table></div>""", unsafe_allow_html=True)
 
-        # ── TAB 2: BONOS E INCENTIVOS ─────────────────────────────────────────────
-        with tab_bonos:
-            top_bonos = (resumen_f[resumen_f["otros_monto"] > 0]
-                         .sort_values("otros_monto", ascending=False)
-                         .head(20).reset_index(drop=True))
-
-            if top_bonos.empty:
-                st.info("No hay registros de bonos o remuneraciones adicionales para el área seleccionada.")
-            else:
-                fig_bonos = go.Figure(go.Bar(
-                    y=top_bonos["nombre_display"],
-                    x=top_bonos["otros_monto"],
-                    orientation="h",
-                    marker_color="#6A0572",
-                    text=top_bonos["otros_monto"].apply(fmt),
-                    textposition="outside",
-                    textfont=dict(size=10, color="#000"),
-                    hovertemplate="<b>%{y}</b><br>Total: %{text}<extra></extra>",
-                ))
-                fig_bonos.update_layout(
-                    plot_bgcolor="white", paper_bgcolor="white",
-                    height=max(320, len(top_bonos)*38),
-                    margin=dict(t=30, b=20, l=10, r=120),
-                    xaxis=dict(showticklabels=False, showgrid=False, zeroline=False),
-                    yaxis=dict(autorange="reversed", tickfont=dict(size=11, color="#000")),
-                    showlegend=False,
-                    title=dict(text="Top funcionarios — Bonos e incentivos acumulados",
-                               font=dict(size=13, color="#000", family="Inter"), x=0),
-                )
-                st.plotly_chart(fig_bonos, use_container_width=True)
-
-                filas_bonos = ""
-                for i, r in top_bonos.iterrows():
-                    area_label = LABELS.get(r["area"], r["area"])
-                    area_color = COLORS.get(r["area"], "#003DA5")
-                    filas_bonos += f"""
-    <tr>
-      <td style="padding:9px 12px;border-bottom:1px solid #EEF3FF;font-weight:700;color:#6A0572;">{i+1}</td>
-      <td style="padding:9px 12px;border-bottom:1px solid #EEF3FF;">
-        <b>{r['nombre_display']}</b><br>
-        <span style="font-size:11px;color:#555;">{r['cargo']}</span><br>
-        <span style="font-size:11px;background:{area_color};color:white;
-          border-radius:4px;padding:1px 6px;">{area_label}</span>
-      </td>
-      <td style="padding:9px 12px;border-bottom:1px solid #EEF3FF;text-align:right;">
-        <span style="font-size:11px;color:#555;">Bonos / Incentivos</span><br>
-        <b style="color:#6A0572">{fmt(r['bonos'])}</b><br>
-        <span style="font-size:11px;color:#555;">Rem. Adicionales</span><br>
-        <b>{fmt(r['rem_adic']) if r['rem_adic'] > 0 else "—"}</b>
-      </td>
-      <td style="padding:9px 12px;border-bottom:1px solid #EEF3FF;text-align:right;
-        font-size:1.05rem;font-weight:900;color:#6A0572;">{fmt(r['otros_monto'])}</td>
-      <td style="padding:9px 12px;border-bottom:1px solid #EEF3FF;text-align:center;
-        color:#555;font-size:12px;">{int(r['meses_bonos'])} meses</td>
-    </tr>"""
-                st.markdown(f"""
-    <div class="wrap" style="margin-top:10px;">
-    <table style="width:100%;border-collapse:collapse;font-size:13px;">
-      <thead><tr>
-        <th style="background:#6A0572;color:white;padding:10px 12px;text-align:left;width:30px">#</th>
-        <th style="background:#6A0572;color:white;padding:10px 12px;text-align:left;">Funcionario</th>
-        <th style="background:#6A0572;color:white;padding:10px 12px;text-align:right;">Detalle</th>
-        <th style="background:#6A0572;color:white;padding:10px 12px;text-align:right;">Total acumulado</th>
-        <th style="background:#6A0572;color:white;padding:10px 12px;text-align:center;">Meses con pago</th>
-      </tr></thead>
-      <tbody>{filas_bonos}</tbody>
-    </table></div>""", unsafe_allow_html=True)
         components.html(_FOOTER_HTML, height=55)
 
     # ═════════════════════════════════════════════════════════════════════════════
-    #  SECCIÓN 6 — PRINCIPALES AUMENTOS DE SUELDO
+    #  SECCIÓN 6 — Principales Aumentos de sueldo
     # ═════════════════════════════════════════════════════════════════════════════
-    with st.expander("📈  PRINCIPALES AUMENTOS DE SUELDO", expanded=False):
+    with st.expander("📈  Principales Aumentos de sueldo", expanded=False):
         st.markdown("""
 <div style="background:linear-gradient(135deg,#F39C12,#F1C40F);border-radius:12px;
   padding:14px 20px;margin-bottom:18px;box-shadow:0 2px 10px rgba(243,156,18,.35);">
