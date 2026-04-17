@@ -89,6 +89,143 @@ function printSec(){
     return btn_html + js
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+st.set_page_config(page_title="Remuneraciones Purén 2025", page_icon="🏛️", layout="wide",
+                   initial_sidebar_state="expanded")
+
+st.markdown("""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+html,body,[class*="css"]{font-family:'Inter',sans-serif;}
+.stApp{background:#EEF3FF;}
+section[data-testid="stSidebar"]{background:#003DA5!important;}
+section[data-testid="stSidebar"] *{color:white!important;}
+section[data-testid="stSidebar"] .stTextInput input{
+  background:rgba(255,255,255,.15)!important;border:1px solid rgba(255,255,255,.4)!important;
+  color:white!important;border-radius:8px;}
+section[data-testid="stSidebar"] .stSelectbox>div>div{
+  background:rgba(255,255,255,.15)!important;border:1px solid rgba(255,255,255,.4)!important;border-radius:8px;}
+section[data-testid="stSidebar"] input[type="checkbox"]{accent-color:#27AE60 !important;width:17px;height:17px;}
+section[data-testid="stSidebar"] label{font-weight:600!important;letter-spacing:.02em;}
+.hdr{background:linear-gradient(135deg,#003DA5,#0055CC);border-radius:14px;padding:26px 32px;margin-bottom:28px;}
+.hdr h1{font-size:1.9rem;font-weight:900;color:white;margin:0;}
+.hdr p{font-size:1rem;color:rgba(255,255,255,.85);margin:5px 0 0;}
+.sec{font-size:1.1rem;font-weight:800;color:#000000;border-left:5px solid #4DA3FF;padding-left:12px;margin:30px 0 14px;}
+.wrap{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,61,165,.1);overflow:hidden;margin-bottom:8px;}
+table{width:100%;border-collapse:collapse;font-size:14px;}
+table thead th{background:#003DA5;color:white;padding:11px 15px;font-weight:700;font-size:13px;text-align:right;}
+table thead th:first-child{text-align:left;}
+table.t-res td{padding:10px 15px;border-bottom:1px solid #EEF3FF;color:#1A2B4A;text-align:right;}
+table.t-res td:first-child{text-align:left;font-weight:600;color:#003DA5;}
+table.t-res tr:hover td{background:#F0F5FF;}
+table.t-res tr.hl td{background:#E8F0FF;}
+table.t-res tr.tot td{background:#003DA5;color:white!important;font-weight:800;border-bottom:none;}
+table.t-top td{padding:9px 14px;border-bottom:1px solid #EEF3FF;color:#1A2B4A;text-align:left;vertical-align:top;}
+table.t-top td:first-child{text-align:center;width:28px;font-weight:800;color:#4DA3FF;}
+table.t-top td:last-child{text-align:right;font-weight:700;color:#003DA5;white-space:nowrap;}
+table.t-top tr:hover td{background:#F0F5FF;}
+table.t-mes td{padding:10px 15px;border-bottom:1px solid #EEF3FF;color:#1A2B4A;}
+table.t-mes td:last-child{text-align:right;font-weight:700;color:#003DA5;}
+table.t-mes tr:hover td{background:#F0F5FF;}
+.kpis{display:flex;gap:14px;margin:20px 0;flex-wrap:wrap;}
+.kpi{flex:1;min-width:140px;border-radius:12px;padding:16px;text-align:center;}
+.kpi .lbl{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:rgba(255,255,255,.85);margin-bottom:5px;}
+.kpi .val{font-size:1.15rem;font-weight:900;color:white;}
+.ficha{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,61,165,.1);padding:26px 30px;margin-top:6px;}
+.f-nom{font-size:1.4rem;font-weight:900;color:#003DA5;margin-bottom:3px;}
+.f-sub{font-size:.93rem;color:#0066CC;font-weight:600;margin-bottom:18px;}
+.f-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+.f-item{background:#F0F5FF;border-radius:10px;padding:12px 14px;}
+.f-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0066CC;margin-bottom:3px;}
+.f-val{font-size:.92rem;font-weight:700;color:#1A2B4A;}
+.print-btn{display:inline-block;margin-top:18px;padding:10px 24px;background:#003DA5;color:white!important;
+  font-weight:700;font-size:14px;border-radius:9px;cursor:pointer;border:none;text-decoration:none;}
+.print-btn:hover{background:#0055CC;}
+[data-testid="stExpander"] summary,[data-testid="stExpander"] summary *{color:#000000!important;fill:#000000!important;font-weight:700;}
+details[open]>summary,details[open]>summary *{background:#003DA5!important;color:#ffffff!important;
+  fill:#ffffff!important;border-radius:6px 6px 0 0;padding-left:12px !important;}
+.inf-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px;}
+.inf-card{border-radius:10px;padding:13px 16px;}
+.inf-card .ic-lbl{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.inf-card .ic-val{font-size:.95rem;font-weight:800;}
+.inf-card .ic-det{font-size:.75rem;margin-top:3px;opacity:.85;}
+.torta-resumen{background:white;border-radius:14px;box-shadow:0 2px 12px rgba(0,61,165,.1);padding:20px 22px;}
+.torta-item{border-bottom:1px solid #EEF3FF;padding:10px 0;}
+.torta-item:last-child{border-bottom:none;}
+.torta-label{font-size:.85rem;font-weight:700;color:#000000;}
+.torta-val{font-size:.85rem;color:#000000;}
+@media print{
+  section[data-testid="stSidebar"],.hdr,.sec,button,.stTextInput,.stSelectbox,
+  [data-testid="stToolbar"],[data-testid="stDecoration"]{display:none!important;}
+  .ficha{box-shadow:none;border:1px solid #ccc;}
+  .stApp{background:white!important;}
+  .print-footer-bar{display:block!important;}
+}
+.print-footer-bar{display:none;}
+</style>
+""", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  CONSTANTES Y HELPERS
+# ─────────────────────────────────────────────────────────────────────────────
+MESES = {"01":"Enero","02":"Febrero","03":"Marzo","04":"Abril","05":"Mayo",
+          "06":"Junio","07":"Julio","08":"Agosto","09":"Septiembre",
+          "10":"Octubre","11":"Noviembre","12":"Diciembre"}
+MESES_INV = {v:k for k,v in MESES.items()}
+AREAS  = ["EDUCACION","JARDINES","MUNICIPAL","SALUD"]
+LABELS = {"EDUCACION":"Educación","JARDINES":"Jardines (JUNJI)",
+          "MUNICIPAL":"Municipal","SALUD":"Salud"}
+COLORS = {"EDUCACION":"#27AE60","JARDINES":"#B8860B",
+          "MUNICIPAL":"#003DA5","SALUD":"#C0392B"}
+TOP_BG = {"EDUCACION":"#27AE60","JARDINES":"#B8860B",
+          "MUNICIPAL":"#003DA5","SALUD":"#C0392B"}
+
+def norm_str(s):
+    s = str(s).strip().upper()
+    s = unicodedata.normalize("NFD", s)
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn")
+    return re.sub(r"\s+", " ", s)
+
+def parse_clp(s):
+    if not s or str(s).strip() in ("","nan","None"): return None
+    s = str(s).strip()
+    if re.match(r"^\s*(\(\d+\))+\s*$", s): return None
+    if re.match(r"^\d+\.\d+$", s): return round(float(s))
+    digits = re.sub(r"[^\d]","",s)
+    if not digits: return None
+    v = int(digits)
+    return v if v <= 50_000_000 else None
+
+def fmt(v):
+    if v is None or (isinstance(v,float) and pd.isna(v)): return "—"
+    return "$" + f"{int(v):,}".replace(",",".")
+
+def pv(df_func, col):
+    s = df_func[col].replace("",pd.NA).dropna()
+    return str(s.iloc[0]).strip() if len(s)>0 else "—"
+
+@st.cache_data
+def load():
+    df = pd.read_parquet("remuneraciones_2025.parquet")
+    df["rem_n"]      = df["rem_bruta"].apply(parse_clp)
+    df["mes_nombre"] = df["mes"].map(MESES)
+    df["mes_ord"]    = df["mes"].astype(int)
+    df["ap_n"]  = df["apellido_paterno"].apply(norm_str)
+    df["am_n"]  = df["apellido_materno"].apply(norm_str)
+    df["nom_n"] = df["nombres"].apply(norm_str)
+    df["key"]   = df["ap_n"] + "|" + df["am_n"] + "|" + df["nom_n"] + "|" + df["area"]
+    display_map = (
+        df.groupby("key")
+        .apply(lambda g: (
+            g["apellido_paterno"].mode()[0] + " " +
+            g["apellido_materno"].mode()[0] + ", " +
+            g["nombres"].mode()[0]
+        ))
+        .to_dict()
+    )
+    df["nombre_display"] = df["key"].map(display_map)
+    return df
+
 df_all = load()
 
 # ─────────────────────────────────────────────────────────────────────────────
